@@ -23,7 +23,7 @@ int main(int argc, char** argv)
         return 1;
     }
     int k = stringToInt(argv[1]);
-    if (k < 1)
+    if (k++ < 1)
 	return 2;
     char* buffer = (char* ) malloc(k);
     int length, n;
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 	    if (length == k)
 	    {
 	        length = 0;
-		skip = 0;
+		skip = 1;
 	    }
 	} else
 	{
@@ -83,6 +83,5 @@ int main(int argc, char** argv)
     }
     free(buffer);
     printf("%s finished normally\n", argv[0]);
- //   printf("%d\n", argc);
     return 0;
 }
