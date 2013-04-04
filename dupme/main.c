@@ -1,6 +1,8 @@
 #include <unistd.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdlib.h>
+#define STDIN 0
+#define STDOUT 1
 
 int stringToInt(char* c)
 {
@@ -9,7 +11,7 @@ int stringToInt(char* c)
     {
         if (*c >= '0' && *c <= '9')
 	    ans = ans * 10 + *c - '0'; else
-	    return -1;
+	    return -1;//invalid param
 	c++;
     }
     return ans;
@@ -17,27 +19,25 @@ int stringToInt(char* c)
 
 int main(int argc, char** argv)
 {
-    printf("%s is working normally\n", argv[0]);
+//  printf("%s is working normally\n", argv[0]);
     if (argc != 2)
-    {
-        return 1;
-    }
+        return 1;//no arguments
     int k = stringToInt(argv[1]);
     if (k++ < 1)
-	return 2;
+	return 2;//invalid length( == 0)
     char* buffer = (char* ) malloc(k);
     int length, n;
     int skip = 0;
     length = 0;
     while (1)
     {
-	n = read(0, buffer + length, k - length);
+	n = read(STDIN, buffer + length, k - length);
 	if (n == 0)
-	    break;
+	    break;//the end
 	if (n == -1)
 	{
 	    free(buffer);
-	    return 3;
+	    return 3;//IO error
 	}
 	int i;
 	int endOfString = -1;
@@ -53,11 +53,11 @@ int main(int argc, char** argv)
 		        int beginningOfWrite = endOfString + 1;
 		        while (beginningOfWrite < i + 1)
 		        {
-		            int writer = write(1, buffer + beginningOfWrite, i - endOfString);
+		            int writer = write(STDOUT, buffer + beginningOfWrite, i - endOfString);
 		            if (writer == -1)
 		            {
 		                free(buffer);
-			        return 4;
+			        return 4;//IO error
 			    }
 		            beginningOfWrite += writer;
 		        }
@@ -82,6 +82,6 @@ int main(int argc, char** argv)
 	}
     }
     free(buffer);
-    printf("%s finished normally\n", argv[0]);
+//  printf("%s finished normally\n", argv[0]);
     return 0;
 }
