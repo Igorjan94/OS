@@ -27,6 +27,7 @@ int main(int argc, char** argv)
 	return 2;
     char* buffer = (char* ) malloc(k);
     int length, n;
+    int skip = 0;
     length = 0;
     while (1)
     {
@@ -44,26 +45,43 @@ int main(int argc, char** argv)
 	{
 	    if (buffer[i] == '\n')
 	    {
-	        int j;
-		for (j = 0; j < 2; j++)
+		if (!skip)
 		{
-		    int beginningOfWrite = endOfString + 1;
-		    while (beginningOfWrite < i + 1)
+    	            int j;
+		    for (j = 0; j < 2; j++)
 		    {
-		        int writer = write(1, buffer + beginningOfWrite, i - endOfString);
-		        if (writer == -1)
+		        int beginningOfWrite = endOfString + 1;
+		        while (beginningOfWrite < i + 1)
 		        {
-		            free(buffer);
-			    return 4;
-			}
-		        beginningOfWrite += writer;
+		            int writer = write(1, buffer + beginningOfWrite, i - endOfString);
+		            if (writer == -1)
+		            {
+		                free(buffer);
+			        return 4;
+			    }
+		            beginningOfWrite += writer;
+		        }
 		    }
-		}
+    	        }
 		endOfString = i;
+		skip = 0;
 	    }
-	}
+        }
 	length += n;
+	if (endOfString == -1)
+	{
+	    if (length == k)
+	    {
+	        length = 0;
+		skip = 0;
+	    }
+	} else
+	{
+ 	    length -= endOfString + 1;
+	    memmove(buffer, buffer + endOfString + 1, length);
+	}
     }
+    free(buffer);
     printf("%s finished normally\n", argv[0]);
  //   printf("%d\n", argc);
     return 0;
