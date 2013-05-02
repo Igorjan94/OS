@@ -5,6 +5,9 @@ old=""
 
 while :; do
     new=$(${*:2})
+    if [[ -n $old ]]; then
+        diff -u <(echo "$old") <(echo "$new")
+    fi
     old="$new"
     sleep "$SLEEP"
 done
