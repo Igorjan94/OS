@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+for f; do
+    if [[ -f $f ]]; then
+        echo `basename "$f"`
+        read newName
+        dirName=`dirname "$f"`
+        mv "$f" "${dirName}/${newName}"
+    fi
+done
