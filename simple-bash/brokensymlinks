@@ -1,3 +1,16 @@
 #!/bin/bash -e
 
+scanner() {
+    for file in "$@"; do
+        if [ -d "$file" ]; then
+            scanner "$file"/*
+        fi
+        if ! [ -e "$file" ]; then
+            if [ -L "$file" ]; then
+                echo "Broken symlink: $file"
+            fi
+        fi
+    done
+}
 
+scanner "$@"
