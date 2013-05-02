@@ -1,1 +1,10 @@
-#!/bin/bash -e
+#!/bin/bash
+
+SLEEP=$1
+old=""
+
+while :; do
+    new=$(${*:2})
+    old="$new"
+    sleep "$SLEEP"
+done
