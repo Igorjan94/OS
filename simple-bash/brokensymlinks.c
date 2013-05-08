@@ -15,6 +15,21 @@ int brokenSymLinks(char* name)
         printf("%s directory not found", name);
         return 2;
     }
+    int length = strlen(name);
+    char* buf = malloc(length + 512);
+    memcpy(buf, name, sizeof(char) * (length + 1));
+    while ((f = readdir(d)) != NULL)
+    {
+        if (!strcmp(f->d_name, ".") || !strcmp(f->d_name, ".."))
+            continue;
+        memcpy(buf + length, f->d_name, sizeof(char)  * strlen(f->d_name));
+        if (f->d_type == DT_DIR)
+            brokenSymLinks(buf);
+        if (f->d_type == DT_LNK && access(buf, F_OK) == -1)
+            printf("broken symlink: %s\n", buf);
+    }
+    closedir(d);
+    free(buf);
     return 0;
 }
 
