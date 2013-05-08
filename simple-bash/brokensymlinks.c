@@ -3,13 +3,19 @@
 #include <unistd.h>
 #include <dirent.h>
 
-void brokenSymLinks(char* name)
+int brokenSymLinks(char* name)
 {
     DIR* d;
     struct dirent* f;
     if (name == ".")
       return;
     d = opendir(name);
+    if (!d)
+    {
+        printf("%s directory not found", name);
+        return 2;
+    }
+    return 0;
 }
 
 int main(int argc, char** argv)
@@ -19,7 +25,6 @@ int main(int argc, char** argv)
         printf("No directory for search broken symlinks\n");
         return 1;
     }
-    brokenSymLinks(argv[1]);
-    printf("%s\n", argv[1]);
-    return 0;
+    int er = brokenSymLinks(argv[1]);
+    return er;
 }
