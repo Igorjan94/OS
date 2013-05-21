@@ -17,8 +17,7 @@ int brokenSymLinks(char* name)
     }
     int length = strlen(name);
     char* buf = malloc(length + 512);
-    memcpy(buf, name, sizeof(char) * (length + 1));
-    //printf("directory for search : %s\n", buf);
+    memcpy(buf, name, length + 1);
     if (buf[length - 1] != '/')
     {
         buf[length] = '/';
