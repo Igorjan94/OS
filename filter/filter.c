@@ -29,9 +29,19 @@ void write_(int fd, char* buffer, int size)
     }
 }
 
-int one_run(char** command, char* buffer, int count, char separator)
+int one_run(char** command, char* buffer, int count, char separator, int command_size)
 {
+    char* cur = malloc(count + 1);
+    memcpy(cur, buffer, count);
+    cur[count + 1] = 0;
+    command[command_size - 1] = cur;
     int pid = fork();
+    if (pid == -1)
+    {
+        printf("EPIC FAIL\n");
+        free(cur);
+        _exit(0);
+    }
     if (pid)
     {
         pid_t tpid;
@@ -46,11 +56,12 @@ int one_run(char** command, char* buffer, int count, char separator)
             }
         }
         while (tpid != pid);
+        free(cur);
     }
     else
     {
         execvp(command[0], command);
-        exit(0);
+        return 0;
     }
     return 0;
 }
@@ -87,11 +98,11 @@ int main(int argc, char** argv)
         printf("No command\n");
         return 1;
     }
-    char** command = malloc((argc - optind + 2) * sizeof(char*));
+    char** command = malloc((argc - optind + 3) * sizeof(char*));
     int i;
     for (i = optind; i < argc; i++)
         command[i - optind] = argv[i];
-    command[argc - optind + 1] = 0;
+    command[argc - optind + 2] = NULL;
     int r;
     int length = 0;
     char* buffer = (char*) malloc(size);
@@ -101,6 +112,7 @@ int main(int argc, char** argv)
         r = read(STDIN, buffer + length, size - length);
         if (r == -1)
         {
+            free(command);
             free(buffer);
             return 1;
         }
@@ -109,7 +121,7 @@ int main(int argc, char** argv)
         int delimpos;
         while ((delimpos = find(c, buffer, from, olen - from)) >= 0)
         {
-            one_run(command, buffer, delimpos, c);
+            one_run(command, buffer, delimpos, c, argc - optind + 1);
             memmove(buffer, buffer + delimpos + 1, olen - delimpos - 1);
             from = 0;
             olen -= delimpos + 1;
@@ -119,7 +131,7 @@ int main(int argc, char** argv)
             if (olen + 1 >= size)
                 return 4;
             buffer[olen + 1] = c;
-            one_run(command, buffer, olen, c);
+            one_run(command, buffer, olen, c, argc - optind + 1);
         }
     }
     while (r);
