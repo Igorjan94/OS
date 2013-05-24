@@ -12,8 +12,9 @@ int main(int argc, char** argv)
         return 1;
     struct addrinfo hints;
     struct addrinfo *result;
-    hints.ai_socktype = SOCK_DGRAM; /* Datagram socket */
     hints.ai_flags = AI_PASSIVE;    /* For wildcard IP address */
+    hints.ai_socktype = SOCK_STREAM; /* Datagram socket */
+    hints.ai_family = AF_UNSPEC;
     hints.ai_protocol = 0;          /* Any protocol */
     int s = getaddrinfo(NULL, "8822", &hints, &result);
     if (s != 0)
