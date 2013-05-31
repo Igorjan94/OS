@@ -1,8 +1,8 @@
+#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <poll.h>
-#define _GNU_SOURCE
 #define buffer_size 4096
 
 struct in_out
@@ -14,12 +14,12 @@ struct in_out
     int size;
 };
 
-size_t _read(int fd, char* buffer, size_t size)
+int _read(int fd, char* buffer, int size)
 {
-    size_t current = 0;
+    int current = 0;
     while (current < size)
     {
-        size_t result = read(fd, buffer + current, size);
+        int result = read(fd, buffer + current, size);
         if (result == 0)
             return current;
         if (result == -1)
@@ -30,12 +30,12 @@ size_t _read(int fd, char* buffer, size_t size)
     return current;
 }
 
-size_t _write(int fd, char* buffer, size_t size)
+int _write(int fd, char* buffer, int size)
 {
-    size_t result = 0;
+    int result = 0;
     while (result < size)
     {
-        size_t done = write(fd, buffer, size - result);
+        int done = write(fd, buffer, size - result);
         if (done < 0)
             return -1; else
             result += done;
@@ -51,8 +51,6 @@ int main(int argc, char** argv)
         printf("No arguments\n");
         return 1;
     }
-    int t = 0;
-
     int count = argc / 2;
     struct in_out* fds = (struct in_out*) malloc(count * sizeof(struct in_out));
     int i;
@@ -75,7 +73,6 @@ int main(int argc, char** argv)
         for_poll[j++] = fds[i].out;
     }
 
-    int f = 0;
     while (1) 
     {
         int y = poll(for_poll, argc, 0);
