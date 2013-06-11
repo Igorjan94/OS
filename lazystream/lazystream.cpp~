@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <vector>
+#include "lazystream.h"
+
+using namespace std;
+
+LazyStream::LazyStream(int fd, int size, char separator)
+{
+    this->fd = fd;
+    this->size = size;
+    this->separator = separator;
+}
+
+vector<char> LazyStream::read()
+{
+    int current = 0;
+    while (current < size)
+    {
+        int result = read(fd, buffer.begin() + current, size);
+        if (result == 0)
+            return buffer;
+        if (result == -1)
+            return NULL;
+        current += result;
+        size -= current;
+    }
+    return buffer;
+}
+
+void LazyStream::write(vector<char>& toWrite)
+{
+}
+
+int _write(int fd, char* buffer, int size)
+{
+    int result = 0;
+    while (result < size)
+    {
+        int done = write(fd, buffer, size - result);
+        if (done < 0)
+            return -1; else
+            result += done;
+    }
+    memmove(buffer + result, buffer, buffer_size - result);
+    return result; 
+}
+
