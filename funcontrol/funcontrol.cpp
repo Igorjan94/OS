@@ -9,7 +9,10 @@
 #include <sys/wait.h>
 #include <string.h>
 #define COUNT_OF_TEMPERATURES 4
+#define COUNT_OF_COOLERS 4
 #define MAX_SIZE 16
+#define SLEEP_TIME 5
+#define NORMAL 20
 
 using namespace std;
 
@@ -25,6 +28,30 @@ int readInt(int fd)
     return atoi(buffer);
 }
  
+struct vent
+{
+    char* name;
+    int (*calculate)(vector<int>& a, vector<int>& b);
+
+    int read()
+    {
+        int in = open(name, O_RDONLY);
+        if (in < 0)
+            _exit(1);
+        int q = readInt(in);
+        close(in);
+        return q;
+    }
+
+    vent(char s[], int (*c)(vector<int>& a, vector<int>& b))
+    {
+        name = (char*) malloc((int)strlen(s) + 1);
+        memcpy(name, s, (int)strlen(s));
+        name[(int)strlen(s)] = '\0';
+        calculate = c;
+    }
+};
+
 bool writeInt(int fd, int w)
 {
     int res, cur = 0;
@@ -35,6 +62,55 @@ bool writeInt(int fd, int w)
         cur += res;
     write(fd, "\n", 1);
     return res >= 0;
+}
+
+void readInts(vector<int>& a, int count, char ss[])
+{
+    a.clear();
+    a.resize(count);
+    for (int i = 0; i < count; i++)
+    {
+        char s[15];
+        sprintf(s, "%s%d.txt", ss, i);
+        int in = open(s, O_RDONLY);
+        if (in < 0)
+            _exit(2);
+        a[i] = readInt(in);
+        close(in);
+    }
+}
+
+void writeInts(vector<int>& a, int count, char ss[])
+{
+    for (int i = 0; i < count; i++)
+    {
+        char s[15];
+        sprintf(s, "%s%d.txt", ss, i);
+        int out = open(s, O_WRONLY | O_CREAT);
+        if (out < 0)
+            _exit(2);
+        writeInt(out, a[i]);
+        close(out);
+    }
+}
+
+int calculate(vector<int>& t, vector<int>& c)
+{
+    int s = 0;
+    for (int i = 0; i < COUNT_OF_TEMPERATURES; i++)
+        s += t[i];
+    s /= COUNT_OF_TEMPERATURES;
+    int d = 0;
+    if (s > NORMAL)
+        for (int i = 0; i < COUNT_OF_COOLERS; i++)
+            d += min(c[i] + 2, 255);
+    else
+        for (int i = 0; i < COUNT_OF_COOLERS; i++)
+            if (t[i] > s)
+                d += min(c[i] + 2, 255); else
+                d += max(c[i] - 2, 0);
+//    d = rand() % 100;
+    return d / COUNT_OF_COOLERS;
 }
     
 int main(int, char **)
@@ -54,22 +130,34 @@ int main(int, char **)
  //       close(STDOUT_FILENO);
   //      close(STDERR_FILENO);
         setsid();
-        int t[COUNT_OF_TEMPERATURES];
-        for (int i = 0; i < COUNT_OF_TEMPERATURES; i++)
+        vector<int> t(COUNT_OF_TEMPERATURES);
+        vector<int> c(COUNT_OF_COOLERS);
+        vector<vent> vents;
+        char te[] = "input";
+        char co[] = "cooler";
+        int counter = 0;
+        for (int i = 0; i < COUNT_OF_COOLERS; i++)
         {
-            char s[15];
-            sprintf(s, "input%d.txt", i);
-            int in = open(s, O_RDONLY);
-            if (in < 0)
-                return 2;
-            t[i] = readInt(in);
-            close(in);
+            char bu[15];
+            sprintf(bu, "%s%d.txt", co, i);
+            vents.push_back(vent(bu, calculate));
         }
-        int out = open("output.txt", O_CREAT | O_WRONLY, 0644);
-        for (int i = 0; i < COUNT_OF_TEMPERATURES; i++)
-            writeInt(out, t[i]);
-        write(out, "\n", 1);
-        close(out);
+        while (true)
+        {
+            readInts(t, COUNT_OF_TEMPERATURES, te);
+            for (int i = 0; i < COUNT_OF_COOLERS; i++)
+            {
+                c[i] = vents[i].read();
+                printf("%d\n", c[i]);
+            }
+            for (int i = 0; i < COUNT_OF_COOLERS; i++)
+                c[i] = vents[i].calculate(t, c);
+            writeInts(c, COUNT_OF_COOLERS, co);
+            sleep(SLEEP_TIME);
+            printf("%d\n", counter);
+            if (counter++ == 10)
+                break;
+        }
+        return 0;
     }
-    return 0;
 }
